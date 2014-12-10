@@ -458,6 +458,7 @@ var stepper = append;
 var init = [];
 var input = [2,3,4];
 var output = transduce(transducer, stepper, init, input);
+// [6,7,8]
 
 // Notice, again, that the only difference in the preceding examples in this section is the creation of the transducer.  Everything else is the same.
 
