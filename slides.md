@@ -4,14 +4,12 @@ Transducers Explained
 Transducers are composable algorithmic transformations.
 
 They are independent from the context of their input and output sources and specify only the essence of the transformation in terms of an individual element.
-   
+
 Because transducers are decoupled from input or output sources, they can be used in many different processes - collections, streams, channels, observables, etc.
-   
+
 Transducers compose directly, without awareness of input or creation of intermediate aggregates.
 
 http://clojure.org/transducers
----
-Reducing Function
 ---
 Reducing Function
 
@@ -34,8 +32,6 @@ function mult(result, item){
 var multed = [2,3,4].reduce(mult, 1);
 // 24 (=1*2*3*4)
 ```
----
-Transformer
 ---
 Transformer
 ```javascript
@@ -73,8 +69,6 @@ var xf = transformer(mult);
 var output = input.reduce(xf.step, xf.init());
 // output = 24 (=1*2*3*4)
 ```
----
-Reduce with Transformers
 ---
 Reduce with Transformers
 ```javascript
@@ -115,8 +109,6 @@ var xf = transformer(mult);
 var output = reduce(xf, 2, input);
 // output = 48 (=2*2*3*4)
 ```
----
-Reduce with Wrapped Transformers
 ---
 Reduce with Wrapped Transformers
 ```javascript
@@ -181,8 +173,6 @@ var output = reduce(xf, 1, input);
 ```
 ---
 Fancy array copy
----
-Fancy array copy
 ```javascript
 function append(result, item){
   result.push(item);
@@ -193,8 +183,6 @@ var input = [2,3,4];
 var output = reduce(append, [], input);
 // output = [2, 3, 4]
 ```
----
-Transform then Append
 ---
 Transform then Append
 ```javascript
@@ -242,8 +230,6 @@ var output = reduce(sum, 0, output);
 // 12 (=0+3+4+5)
 // But needed intermediate array...
 ```
----
-Transducer +1
 ---
 Transducer +1
 ```javascript
@@ -300,8 +286,6 @@ result = xf.step(result, 4);
 var output = xf.result(result);
 // 12
 ```
----
-Transducer +2
 ---
 Transducer +2
 ```javascript
@@ -406,8 +390,6 @@ var output = xf.result(result);
 ```
 ---
 Transduce
----
-Transduce
 ```javascript
 // First, initialize the transformation by calling a transducer
 // with a stepper transformation and defining initial value.
@@ -415,10 +397,7 @@ var transducer = map(plus1);
 var stepper = wrap(append);
 var xf = transducer(stepper);
 var init = [];
-```
----
-Transduce
-```javascript
+
 // Then step through each input item by using the reducing function
 var result = xf.step(init, 2);
 // [3] (=append([], 2+1)))
@@ -428,10 +407,7 @@ result = xf.step(result, 3);
 
 result = xf.step(result, 4);
 // [3,4,5] (=append([3,4], 4+1)))
-```
----
-Transduce
-```javascript
+
 // Finalize the result to our output using
 var output = xf.result(result);
 // [3,4,5]
@@ -577,4 +553,360 @@ var init = [];
 var input = [2,3,4];
 var output = transduce(transducer, stepper, init, input);
 // [6,7,8]
+```
+---
+Composition
+```javascript
+function compose(/*fns*/){
+  var fns = arguments;
+  return function(xf){
+    var i = fns.length - 1;
+    for(; i >= 0; i--){
+      xf = fns[i](xf);
+    }
+    return xf;
+  };
+}
+```
+---
+Composition
+```javascript
+var value = plus1(plus1(plus2(5)));
+// 9
+```
+---
+Composition
+```javascript
+var value = compose(plus1, plus1, plus2)(5);
+// 9
+```
+---
+Composition
+```javascript
+var transducer = compose(
+      map(plus1),  // [3,4,5]
+      map(plus2),  // [5,6,7]
+      map(plus1),  // [6,7,8]
+      map(plus1)); // [7,8,9]
+var stepper = append;
+var init = [];
+var input = [2,3,4];
+var output = transduce(transducer, stepper, init, input);
+// [7,8,9]
+```
+---
+Filter
+```javascript
+function filter(predicate){
+  return function(xf){
+    return {
+      init: function(){
+        return xf.init();
+      },
+      step: function(value, item){
+        var allow = predicate(item);
+        if(allow){
+          value = xf.step(value, item);
+        }
+        return value;
+      },
+      result: function(value){
+        return xf.result(value);
+      }
+    };
+  };
+}
+```
+---
+Filter
+```javascript
+function isOdd(num){
+  return num % 2 === 1;
+}
+var transducer = filter(isOdd);
+var stepper = append;
+var init = [];
+var input = [1,2,3,4,5];
+var output = transduce(transducer, stepper, init, input);
+// [1,3,5]
+```
+---
+Filter
+```javascript
+function isEqual(y){
+  return function(x){
+    return x === y;
+  };
+}
+var transducer = filter(isEqual(2));
+var stepper = append;
+var init = [];
+var input = [1,2,3,4,5];
+var output = transduce(transducer, stepper, init, input);
+// [2]
+```
+---
+Filter
+```javascript
+function not(predicate){
+  return function(x){
+    return !predicate(x);
+  };
+}
+var transducer = filter(not(isEqual(2)));
+var stepper = append;
+var init = [];
+var input = [1,2,3,4,5];
+var output = transduce(transducer, stepper, init, input);
+// [1,3,4,5]
+```
+---
+Pipeline order
+```javascript
+var transducer = compose(
+      map(plus1),         // [2,3,4,5,6]
+      filter(isOdd));     // [3,5]
+var stepper = append;
+var init = [];
+var input = [1,2,3,4,5];
+var output = transduce(transducer, stepper, init, input);
+// [3,5]
+```
+---
+Pipeline order
+```javascript
+var transducer = compose(
+      filter(isOdd),      // [1,3,5]
+      map(plus1));        // [2,4,6]
+var stepper = append;
+var init = [];
+var input = [1,2,3,4,5];
+var output = transduce(transducer, stepper, init, input);
+// [2,4,6]
+```
+---
+Remove
+```javascript
+function remove(predicate){
+  return filter(not(predicate));
+}
+```
+---
+Remove
+```javascript
+var transducer = compose(
+      filter(isOdd),        // [1,3,5]
+      map(plus1),           // [2,4,6]
+      remove(isEqual(4)));  // [2,6]
+var stepper = append;
+var init = [];
+var input = [1,2,3,4,5];
+var output = transduce(transducer, stepper, init, input);
+// [2,6]
+```
+---
+Drop
+```javascript
+function drop(n){
+  return function(xf){
+    var left = n;
+    return {
+      init: function(){
+        return xf.init();
+      },
+      step: function(value, item){
+        if(left > 0){
+          left--;
+        } else {
+          value = xf.step(value, item);
+        }
+        return value;
+      },
+      result: function(value){
+        return xf.result(value);
+      }
+    };
+  };
+}
+```
+---
+Drop
+```javascript
+var transducer = drop(2);
+var stepper = append;
+var init = [];
+var input = [1,2,3,4,5];
+var output = transduce(transducer, stepper, init, input);
+// [3,4,5]
+```
+---
+Take
+```javascript
+function take(n){
+  return function(xf){
+    var left = n;
+    return {
+      init: function(){
+        return xf.init();
+      },
+      step: function(value, item){
+        value = xf.step(value, item);
+        if(--left <= 0){
+          // how do we stop???
+        }
+        return value;
+      },
+      result: function(value){
+        return xf.result(value);
+      }
+    };
+  };
+}
+```
+---
+Reduce Redux
+```javascript
+function transduce(transducer, stepper, init, input){
+  if(typeof stepper === 'function'){
+    stepper = wrap(stepper);
+  }
+
+  var xf = transducer(stepper);
+  return reduce(xf, init, input);
+}
+```
+---
+Reduce Redux
+```javascript
+function reduce(xf, init, input){
+  if(typeof xf === 'function'){
+    xf = wrap(xf);
+  }
+  // how do we stop??
+  var value = input.reduce(xf.step, init);
+  return xf.result(value);
+}
+```
+---
+Reduce Redux
+```javascript
+function wrap(stepper){
+  return {
+    init: function(){
+      throw new Error('init not supported');
+    },
+    step: stepper,
+    result: function(value){
+      return value;
+    }
+  };
+}
+```
+---
+Reduce Redux
+```javascript
+function reduce(xf, init, input){
+  if(typeof xf === 'function'){
+    xf = wrap(xf);
+  }
+
+  return arrayReduce(xf, init, input);
+}
+```
+---
+Reduce Redux
+```javascript
+function arrayReduce(xf, init, array){
+  var value = init;
+  var idx = 0;
+  var length = array.length;
+  for(; idx < length; idx++){
+    value = xf.step(value, array[idx]);
+    // We need to break here, but how do we know?
+  }
+  return xf.result(value);
+}
+```
+---
+Reduce Redux
+```javascript
+function reduced(value){
+  return {
+    value: value,
+    __transducers_reduced__: true
+  };
+}
+
+function isReduced(value){
+  return value && value.__transducers_reduced__;
+}
+
+function deref(reducedValue){
+  return reducedValue.value;
+}
+```
+---
+Reduce Redux
+```javascript
+function arrayReduce(xf, init, array){
+  var value = init;
+  var idx = 0;
+  var length = array.length;
+  for(; idx < length; idx++){
+    value = xf.step(value, array[idx]);
+    if(isReduced(value)){
+      value = deref(value);
+      break;
+    }
+  }
+  return xf.result(value);
+}
+```
+---
+Take 2
+```javascript
+function take(n){
+  return function(xf){
+    var left = n;
+    return {
+      init: function(){
+        return xf.init();
+      },
+      step: function(value, item){
+        value = xf.step(value, item);
+        if(--left <= 0){
+          // we are done, so signal reduced
+          value = reduced(value);
+        }
+        return value;
+      },
+      result: function(value){
+        return xf.result(value);
+      }
+    };
+  };
+}
+```
+---
+Take 2
+```javascript
+var transducer = take(3);
+var stepper = append;
+var init = [];
+var input = [1,2,3,4,5];
+var output = transduce(transducer, stepper, init, input);
+// [1,2,3]
+```
+---
+Take 2
+```javascript
+var transducer = compose(
+    drop(1),    // [2,3,4,5]
+    take(3),    // [2,3,4]
+    drop(1));   // [3,4]
+var stepper = append;
+var init = [];
+var input = [1,2,3,4,5];
+var output = transduce(transducer, stepper, init, input);
+// [3,4]
 ```
