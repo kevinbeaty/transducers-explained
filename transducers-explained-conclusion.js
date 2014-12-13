@@ -109,15 +109,6 @@ function transduce(transducer, stepper, init, input){
   return reduce(xf, init, input);
 }
 
-function reduce(xf, init, input){
-  if(typeof xf === 'function'){
-    xf = wrap(xf);
-  }
-  // how do we stop?? 
-  var value = input.reduce(xf.step, init); 
-  return xf.result(value);
-}
-
 function wrap(stepper){
   return {
     init: function(){
@@ -136,17 +127,6 @@ function reduce(xf, init, input){
   }
 
   return arrayReduce(xf, init, input);
-}
-
-function arrayReduce(xf, init, array){
-  var value = init;
-  var idx = 0;
-  var length = array.length;
-  for(; idx < length; idx++){
-    value = xf.step(value, array[idx]);
-    // We need to break here, but how do we know?
-  }
-  return xf.result(value);
 }
 
 function reduced(value){
@@ -209,3 +189,66 @@ var init = [];
 var input = [1,2,3,4,5];
 var output = transduce(transducer, stepper, init, input);
 // [3,4]
+
+function appending(toAppend){
+  return function(xf){
+    return {
+      init: function(){
+        return xf.init();
+      },
+      step: function(value, item){
+        return xf.step(value, item);
+      },
+      result: function(value){
+        value = xf.step(value, toAppend);
+        if(isReduced(value)){
+          value = deref(value);
+        }
+        return xf.result(value);
+      }
+    };
+  };
+}
+
+var transducer = appending(7);
+var stepper = append;
+var init = [];
+var input = [1,2,3,4,5];
+var output = transduce(transducer, stepper, init, input);
+// [1,2,3,4,5,7]
+
+var transducer = compose(
+    map(plus1),    // [2,3,4,5,6]
+    appending(7)); // [2,3,4,5,6,7]
+var stepper = append;
+var init = [];
+var input = [1,2,3,4,5];
+var output = transduce(transducer, stepper, init, input);
+// [2,3,4,5,6,7]
+
+function xxx(){
+  return function(xf){
+    return {
+      init: function(){
+        // reserved for future use
+        return xf.init();
+      },
+      step: function(value, item){
+        // Optionally:
+        //   1. Step to wrapped transformer
+        //   2. Transform item
+        //   3. Terminate with reduced
+        //
+        // Value/Accumulator is off limits
+        // Pass all the way to stepper
+        return xf.step(value, item);
+      },
+      result: function(value){
+        // Optionally cleanup
+        // Must check for reduced if stepped
+        // Should call result on nested transformer.
+        return xf.result(value);
+      }
+    };
+  };
+}

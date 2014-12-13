@@ -910,3 +910,78 @@ var input = [1,2,3,4,5];
 var output = transduce(transducer, stepper, init, input);
 // [3,4]
 ```
+---
+Appending
+```javascript
+function appending(toAppend){
+  return function(xf){
+    return {
+      init: function(){
+        return xf.init();
+      },
+      step: function(value, item){
+        return xf.step(value, item);
+      },
+      result: function(value){
+        value = xf.step(value, toAppend);
+        if(isReduced(value)){
+          value = deref(value);
+        }
+        return xf.result(value);
+      }
+    };
+  };
+}
+```
+---
+Appending
+```javascript
+var transducer = appending(7);
+var stepper = append;
+var init = [];
+var input = [1,2,3,4,5];
+var output = transduce(transducer, stepper, init, input);
+// [1,2,3,4,5,7]
+```
+---
+Appending
+```javascript
+var transducer = compose(
+    map(plus1),    // [2,3,4,5,6]
+    appending(7)); // [2,3,4,5,6,7]
+var stepper = append;
+var init = [];
+var input = [1,2,3,4,5];
+var output = transduce(transducer, stepper, init, input);
+// [2,3,4,5,6,7]
+```
+---
+Rules
+```javascript
+function xxx(){
+  return function(xf){
+    return {
+      init: function(){
+        // reserved for future use
+        return xf.init();
+      },
+      step: function(value, item){
+        // Optionally:
+        //   1. Step to wrapped transformer
+        //   2. Transform item
+        //   3. Terminate with reduced
+        //
+        // Value/Accumulator is off limits
+        // Pass all the way to stepper
+        return xf.step(value, item);
+      },
+      result: function(value){
+        // Optionally cleanup
+        // Must check for reduced if stepped
+        // Should call result on nested transformer.
+        return xf.result(value);
+      }
+    };
+  };
+}
+```
