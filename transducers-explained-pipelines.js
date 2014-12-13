@@ -1,5 +1,35 @@
 // This is abbreviated source for [Transducers Explained Pipelines](http://simplectic.com/blog/2014/transducers-explained-pipelines/)
 
+function plus(x){
+  return function(y){
+    return x+y;
+  };
+}
+var plus1 = plus(1);
+var plus2 = plus(2);
+
+function append(result, item){
+  result.push(item);
+  return result;
+}
+
+var map = function(f){
+  return function(xf){
+    return {
+      init: function(){
+        return xf.init();
+      },
+      step: function(result, item){
+        var mapped = f(item);
+        return xf.step(result, mapped);
+      },
+      result: function(result){
+        return xf.result(result);
+      }
+    };
+  };
+};
+
 // ## Pipelines
 
 // composes an arbitrary number of functions
