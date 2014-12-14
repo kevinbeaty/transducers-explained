@@ -252,3 +252,61 @@ function xxx(){
     };
   };
 }
+
+function transduce(transducer, stepper, init, input){
+  if(typeof stepper === 'function'){
+    stepper = wrap(stepper);
+  }
+
+  var xf = transducer(stepper);
+  return reduce(xf, init, input);
+}
+
+function wrap(stepper){
+  return {
+    init: function(){
+      throw new Error('init not supported');
+    },
+    step: stepper,
+    result: function(value){
+      return value;
+    }
+  };
+}
+
+function reduce(xf, init, input){
+  if(typeof xf === 'function'){
+    xf = wrap(xf);
+  }
+
+  return arrayReduce(xf, init, input);
+}
+
+function reduced(value){
+  return {
+    value: value,
+    __transducers_reduced__: true
+  };
+}
+
+function isReduced(value){
+  return value && value.__transducers_reduced__;
+}
+
+function deref(reducedValue){
+  return reducedValue.value;
+}
+
+function arrayReduce(xf, init, array){
+  var value = init;
+  var idx = 0;
+  var length = array.length;
+  for(; idx < length; idx++){
+    value = xf.step(value, array[idx]);
+    if(isReduced(value)){
+      value = deref(value);
+      break;
+    }
+  }
+  return xf.result(value);
+}

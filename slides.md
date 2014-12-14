@@ -956,7 +956,7 @@ var output = transduce(transducer, stepper, init, input);
 // [2,3,4,5,6,7]
 ```
 ---
-Rules
+In Review
 ```javascript
 function xxx(){
   return function(xf){
@@ -983,5 +983,79 @@ function xxx(){
       }
     };
   };
+}
+```
+---
+In Review
+```javascript
+function wrap(stepper){
+  return {
+    init: function(){
+      throw new Error('init not supported');
+    },
+    step: stepper,
+    result: function(value){
+      return value;
+    }
+  };
+}
+```
+---
+In Review
+```javascript
+function reduced(value){
+  return {
+    value: value,
+    __transducers_reduced__: true
+  };
+}
+
+function isReduced(value){
+  return value && value.__transducers_reduced__;
+}
+
+function deref(reducedValue){
+  return reducedValue.value;
+}
+```
+---
+In Review
+```javascript
+function transduce(transducer, stepper, init, input){
+  if(typeof stepper === 'function'){
+    stepper = wrap(stepper);
+  }
+
+  var xf = transducer(stepper);
+  return reduce(xf, init, input);
+}
+```
+---
+In Review
+```javascript
+function reduce(xf, init, input){
+  if(typeof xf === 'function'){
+    xf = wrap(xf);
+  }
+
+  return arrayReduce(xf, init, input);
+  // or objectReduce, iteratorReduce
+}
+```
+---
+In Review
+```javascript
+function arrayReduce(xf, init, array){
+  var value = init;
+  var idx = 0;
+  var length = array.length;
+  for(; idx < length; idx++){
+    value = xf.step(value, array[idx]);
+    if(isReduced(value)){
+      value = deref(value);
+      break;
+    }
+  }
+  return xf.result(value);
 }
 ```
