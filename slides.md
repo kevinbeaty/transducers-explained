@@ -20,6 +20,19 @@ function sum(result, item){
 
 var summed = [2,3,4].reduce(sum, 1);
 // 10 (=1+2+3+4)
+
+var summed = arrayReduce(sum, 1, [2,3,4]);
+// 10 (=1+2+3+4)
+
+function arrayReduce(step, init, array){
+  var value = init;
+  var idx = 0;
+  var length = array.length;
+  for(; idx < length; idx++){
+    value = step(value, array[idx]);
+  }
+  return value;
+}
 ```
 ---
 Reducing Function
@@ -31,6 +44,19 @@ function mult(result, item){
 
 var multed = [2,3,4].reduce(mult, 1);
 // 24 (=1*2*3*4)
+
+var multed = arrayReduce(mult, 1, [2,3,4]);
+// 24 (=1*2*3*4)
+
+function arrayReduce(step, init, array){
+  var value = init;
+  var idx = 0;
+  var length = array.length;
+  for(; idx < length; idx++){
+    value = step(value, array[idx]);
+  }
+  return value;
+}
 ```
 ---
 Transformer
@@ -110,7 +136,7 @@ var output = reduce(xf, 2, input);
 // output = 48 (=2*2*3*4)
 ```
 ---
-Reduce with Wrapped Transformers
+Reduce with Functions (again)
 ```javascript
 function reduce(xf, init, input){
   if(typeof xf === 'function'){
@@ -122,7 +148,7 @@ function reduce(xf, init, input){
 }
 ```
 ---
-Reduce with Wrapped Transformers
+Reduce with Functions (again)
 ```javascript
 function wrap(xf){
   return {
@@ -142,7 +168,7 @@ function wrap(xf){
 }
 ```
 ---
-Reduce with Wrapped Transformers
+Reduce with Functions (again)
 ```javascript
 var input = [2,3,4];
 var output = reduce(sum, 1, input);
@@ -184,15 +210,12 @@ var output = reduce(append, [], input);
 // output = [2, 3, 4]
 ```
 ---
-Transform then Append
+Append +1
 ```javascript
 function plus1(item){
   return item + 1;
 }
-```
----
-Transform then Append
-```javascript
+
 var xfplus1 = {
   init: function(){
     throw new Error('init not needed');
@@ -207,7 +230,7 @@ var xfplus1 = {
 };
 ```
 ---
-Transform then Append
+Append +1
 ```javascript
 var xf = xfplus1;
 var init = [];
@@ -224,7 +247,7 @@ var output = xf.result(result);
 // [3,4,5]
 ```
 ---
-Transform then Append
+Append +1
 ```javascript
 var output = reduce(sum, 0, output);
 // 12 (=0+3+4+5)
@@ -573,10 +596,7 @@ Composition
 ```javascript
 var value = plus1(plus1(plus2(5)));
 // 9
-```
----
-Composition
-```javascript
+
 var value = compose(plus1, plus1, plus2)(5);
 // 9
 ```
@@ -593,6 +613,19 @@ var init = [];
 var input = [2,3,4];
 var output = transduce(transducer, stepper, init, input);
 // [7,8,9]
+```
+---
+Filter
+```javascript
+function isOdd(num){
+  return num % 2 === 1;
+}
+var transducer = filter(isOdd);
+var stepper = append;
+var init = [];
+var input = [1,2,3,4,5];
+var output = transduce(transducer, stepper, init, input);
+// [1,3,5]
 ```
 ---
 Filter
@@ -616,19 +649,6 @@ function filter(predicate){
     };
   };
 }
-```
----
-Filter
-```javascript
-function isOdd(num){
-  return num % 2 === 1;
-}
-var transducer = filter(isOdd);
-var stepper = append;
-var init = [];
-var input = [1,2,3,4,5];
-var output = transduce(transducer, stepper, init, input);
-// [1,3,5]
 ```
 ---
 Filter
@@ -687,13 +707,6 @@ var output = transduce(transducer, stepper, init, input);
 ---
 Remove
 ```javascript
-function remove(predicate){
-  return filter(not(predicate));
-}
-```
----
-Remove
-```javascript
 var transducer = compose(
       filter(isOdd),        // [1,3,5]
       map(plus1),           // [2,4,6]
@@ -703,6 +716,23 @@ var init = [];
 var input = [1,2,3,4,5];
 var output = transduce(transducer, stepper, init, input);
 // [2,6]
+```
+---
+Remove
+```javascript
+function remove(predicate){
+  return filter(not(predicate));
+}
+```
+---
+Drop
+```javascript
+var transducer = drop(2);
+var stepper = append;
+var init = [];
+var input = [1,2,3,4,5];
+var output = transduce(transducer, stepper, init, input);
+// [3,4,5]
 ```
 ---
 Drop
@@ -730,14 +760,14 @@ function drop(n){
 }
 ```
 ---
-Drop
+Take
 ```javascript
-var transducer = drop(2);
+var transducer = take(3);
 var stepper = append;
 var init = [];
 var input = [1,2,3,4,5];
 var output = transduce(transducer, stepper, init, input);
-// [3,4,5]
+// [1,2,3]
 ```
 ---
 Take
@@ -913,6 +943,16 @@ var output = transduce(transducer, stepper, init, input);
 ---
 Appending
 ```javascript
+var transducer = appending(7);
+var stepper = append;
+var init = [];
+var input = [1,2,3,4,5];
+var output = transduce(transducer, stepper, init, input);
+// [1,2,3,4,5,7]
+```
+---
+Appending
+```javascript
 function appending(toAppend){
   return function(xf){
     return {
@@ -932,16 +972,6 @@ function appending(toAppend){
     };
   };
 }
-```
----
-Appending
-```javascript
-var transducer = appending(7);
-var stepper = append;
-var init = [];
-var input = [1,2,3,4,5];
-var output = transduce(transducer, stepper, init, input);
-// [1,2,3,4,5,7]
 ```
 ---
 Appending
@@ -988,6 +1018,7 @@ function xxx(){
 ---
 In Review
 ```javascript
+// convert reducing function to transformer
 function wrap(stepper){
   return {
     init: function(){
@@ -999,10 +1030,8 @@ function wrap(stepper){
     }
   };
 }
-```
----
-In Review
-```javascript
+
+// signal early termination
 function reduced(value){
   return {
     value: value,
@@ -1029,10 +1058,7 @@ function transduce(transducer, stepper, init, input){
   var xf = transducer(stepper);
   return reduce(xf, init, input);
 }
-```
----
-In Review
-```javascript
+
 function reduce(xf, init, input){
   if(typeof xf === 'function'){
     xf = wrap(xf);
@@ -1041,10 +1067,7 @@ function reduce(xf, init, input){
   return arrayReduce(xf, init, input);
   // or objectReduce, iteratorReduce
 }
-```
----
-In Review
-```javascript
+
 function arrayReduce(xf, init, array){
   var value = init;
   var idx = 0;
@@ -1059,3 +1082,19 @@ function arrayReduce(xf, init, array){
   return xf.result(value);
 }
 ```
+---
+Transducers are composable algorithmic transformations.
+
+They are independent from the context of their input and output sources and specify only the essence of the transformation in terms of an individual element.
+
+Because transducers are decoupled from input or output sources, they can be used in many different processes - collections, streams, channels, observables, etc.
+
+Transducers compose directly, without awareness of input or creation of intermediate aggregates.
+
+---
+Transducers Explained
+
+- https://github.com/kevinbeaty
+- https://github.com/transduce
+- http://simplectic.com/blog/
+- Twitter: @simplectic

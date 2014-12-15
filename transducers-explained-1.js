@@ -20,15 +20,31 @@ function sum(result, item){
   return result + item;
 }
 
+var summed = [2,3,4].reduce(sum, 1);
+// 10 (=1+2+3+4)
+
+var summed = arrayReduce(sum, 1, [2,3,4]);
+// 10 (=1+2+3+4)
+
 function mult(result, item){
   return result * item;
 }
 
-// 10 (=1+2+3+4)
-var summed = [2,3,4].reduce(sum, 1);
-
-// 24 (=1\*2\*3\*4)
 var multed = [2,3,4].reduce(mult, 1);
+// 24 (=1\*2\*3\*4)
+
+var multed = arrayReduce(mult, 1, [2,3,4]);
+// 24 (=1\*2\*3\*4)
+
+function arrayReduce(step, init, array){
+  var value = init;
+  var idx = 0;
+  var length = array.length;
+  for(; idx < length; idx++){
+    value = step(value, array[idx]);
+  }
+  return value;
+}
 
 // ## Transformer
 
