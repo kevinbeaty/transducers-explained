@@ -1,6 +1,10 @@
 ---
 Transducers Explained
 ---
+Why?
+---
+What?
+---
 Transducers are composable algorithmic transformations.
 
 They are independent from the context of their input and output sources and specify only the essence of the transformation in terms of an individual element.
@@ -10,6 +14,8 @@ Because transducers are decoupled from input or output sources, they can be used
 Transducers compose directly, without awareness of input or creation of intermediate aggregates.
 
 http://clojure.org/transducers
+---
+How?
 ---
 Reducing Function
 ```javascript
