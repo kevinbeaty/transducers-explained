@@ -12,49 +12,88 @@ Transducers compose directly, without awareness of input or creation of intermed
 http://clojure.org/transducers
 ---
 Reducing Function
-
 ```javascript
 function sum(result, item){
   return result + item;
 }
 
-var summed = [2,3,4].reduce(sum, 1);
+var output = [2,3,4].reduce(sum, 1);
 // 10 (=1+2+3+4)
 
-var summed = arrayReduce(sum, 1, [2,3,4]);
+var output = arrayReduce(sum, 1, [2,3,4]);
 // 10 (=1+2+3+4)
 
 function arrayReduce(step, init, array){
+  // Start with an initial value
   var value = init;
+
+  // Input one item at a time, passing each result
+  // to next iteration using reducing function
   var idx = 0;
   var length = array.length;
   for(; idx < length; idx++){
     value = step(value, array[idx]);
   }
+
+   // Output last computed result
   return value;
 }
 ```
 ---
 Reducing Function
-
 ```javascript
 function mult(result, item){
   return result * item;
 }
 
-var multed = [2,3,4].reduce(mult, 1);
+var output = [2,3,4].reduce(mult, 1);
 // 24 (=1*2*3*4)
 
-var multed = arrayReduce(mult, 1, [2,3,4]);
+var output = arrayReduce(mult, 1, [2,3,4]);
 // 24 (=1*2*3*4)
 
 function arrayReduce(step, init, array){
+  // Start with an initial value
   var value = init;
+
+  // Input one item at a time, passing each result
+  // to next iteration using reducing function
   var idx = 0;
   var length = array.length;
   for(; idx < length; idx++){
     value = step(value, array[idx]);
   }
+
+   // Output last computed result
+  return value;
+}
+```
+---
+Reducing Function
+```javascript
+function mult(result, item){
+  return result * item;
+}
+
+var output = [2,3,4].reduce(mult, 2);
+// 48 (=2*2*3*4)
+
+var output = arrayReduce(mult, 2, [2,3,4]);
+// 48 (=2*2*3*4)
+
+function arrayReduce(step, init, array){
+  // Start with an initial value
+  var value = init;
+
+  // Input one item at a time, passing each result
+  // to next iteration using reducing function
+  var idx = 0;
+  var length = array.length;
+  for(; idx < length; idx++){
+    value = step(value, array[idx]);
+  }
+
+   // Output last computed result
   return value;
 }
 ```
@@ -82,17 +121,39 @@ var transformer = function(reducingFunction){
 ---
 Transformer
 ```javascript
+// Input source
 var input = [2,3,4];
+
+// Create transformer from reducing function
 var xf = transformer(sum);
-var output = input.reduce(xf.step, xf.init());
+
+// start with an initial value
+var init = xf.init();
+
+// reduce using step reducing function
+var value = input.reduce(xf.step, init);
+
+// Output last computed result
+var output = xf.result(value);
 // output = 10 (=1+2+3+4)
 ```
 ---
 Transformer
 ```javascript
+// Input source
 var input = [2,3,4];
+
+// Create transformer from reducing function
 var xf = transformer(mult);
-var output = input.reduce(xf.step, xf.init());
+
+// start with an initial value
+var init = xf.init();
+
+// reduce using step reducing function
+var value = input.reduce(xf.step, init);
+
+// Output last computed result
+var output = xf.result(value);
 // output = 24 (=1*2*3*4)
 ```
 ---
@@ -107,33 +168,37 @@ function reduce(xf, init, input){
 Reduce with Transformers
 ```javascript
 var input = [2,3,4];
+var init = xf.init();
 var xf = transformer(sum);
-var output = reduce(xf, xf.init(), input);
+var output = reduce(xf, init, input);
 // output = 10 (=1+2+3+4)
 ```
 ---
 Reduce with Transformers
 ```javascript
 var input = [2,3,4];
+var init = xf.init();
 var xf = transformer(mult);
-var output = reduce(xf, xf.init(), input);
+var output = reduce(xf, init, input);
 // output = 24 (=1*2*3*4)
 ```
 ---
 Reduce with Transformers
 ```javascript
 var input = [2,3,4];
-var xf = transformer(sum);
-var output = reduce(xf, 2, input);
-// output = 11 (=2+2+3+4)
+var init = 2;
+var xf = transformer(mult);
+var output = reduce(xf, init, input);
+// output = 48 (=2*2*3*4)
 ```
 ---
 Reduce with Transformers
 ```javascript
 var input = [2,3,4];
-var xf = transformer(mult);
-var output = reduce(xf, 2, input);
-// output = 48 (=2*2*3*4)
+var init = 2;
+var xf = transformer(sum);
+var output = reduce(xf, init, input);
+// output = 11 (=2+2+3+4)
 ```
 ---
 Reduce with Functions (again)
@@ -148,7 +213,7 @@ function reduce(xf, init, input){
 }
 ```
 ---
-Reduce with Functions (again)
+Reduce with Functions
 ```javascript
 function wrap(xf){
   return {
@@ -157,7 +222,8 @@ function wrap(xf){
       throw new Error('init not supported');
     },
 
-    // Input one item at a time, passing each result to next iteration
+    // Input one item at a time, passing
+    // each result to next iteration
     step: xf,
 
     // Output last computed result
@@ -168,21 +234,21 @@ function wrap(xf){
 }
 ```
 ---
-Reduce with Functions (again)
+Reduce with Functions
 ```javascript
 var input = [2,3,4];
 var output = reduce(sum, 1, input);
 // output = 10 (=1+2+3+4)
 ```
 ---
-Reduce with Wrapped Transformers
+Reduce with Functions
 ```javascript
 var input = [2,3,4];
 var output = reduce(mult, 2, input);
 // output = 48 (=2*2*3*4)
 ```
 ---
-Reduce with Wrapped Transformers
+Reduce with Transformers
 ```javascript
 var input = [2,3,4];
 var xf = wrap(sum);
@@ -190,7 +256,7 @@ var output = reduce(xf, 2, input);
 // output = 11 (=2+2+3+4)
 ```
 ---
-Reduce with Wrapped Transformers
+Reduce with Transformers
 ```javascript
 var input = [2,3,4];
 var xf = wrap(mult);
@@ -198,7 +264,7 @@ var output = reduce(xf, 1, input);
 // output = 24 (=1*2*3*4)
 ```
 ---
-Fancy array copy
+Append +1
 ```javascript
 function append(result, item){
   result.push(item);
@@ -247,11 +313,43 @@ var output = xf.result(result);
 // [3,4,5]
 ```
 ---
-Append +1
+Sum +1
 ```javascript
 var output = reduce(sum, 0, output);
 // 12 (=0+3+4+5)
 // But needed intermediate array...
+```
+---
+Sum +1
+```javascript
+var xfplus1 = {
+  init: function(){
+    throw new Error('init not needed');
+  },
+  step: function(result, item){
+    var plus1ed = plus1(item);
+    return sum(result, plus1ed);
+  },
+  result: function(result){
+    return result;
+  }
+};
+```
+---
+Append +1
+```javascript
+var xfplus1 = {
+  init: function(){
+    throw new Error('init not needed');
+  },
+  step: function(result, item){
+    var plus1ed = plus1(item);
+    return append(result, plus1ed);
+  },
+  result: function(result){
+    return result;
+  }
+};
 ```
 ---
 Transducer +1
@@ -326,8 +424,8 @@ var transducerPlus1 = function(xf){
       return xf.init();
     },
     step: function(result, item){
-      var plus1ed = plus1(item);
-      return xf.step(result, plus1ed);
+      var plussed = plus1(item);
+      return xf.step(result, plussed);
     },
     result: function(result){
       return xf.result(result);
@@ -344,8 +442,8 @@ var transducerPlus2 = function(xf){
       return xf.init();
     },
     step: function(result, item){
-      var plus1ed = plus2(item);
-      return xf.step(result, plus1ed);
+      var plussed = plus2(item);
+      return xf.step(result, plussed);
     },
     result: function(result){
       return xf.result(result);
@@ -431,8 +529,69 @@ result = xf.step(result, 3);
 result = xf.step(result, 4);
 // [3,4,5] (=append([3,4], 4+1)))
 
-// Finalize the result to our output using
+// Finalize to output using result
 var output = xf.result(result);
+// [3,4,5]
+```
+---
+Transduce
+```javascript
+// First, initialize the transformation by calling a transducer
+// with a stepper transformation and defining initial value.
+var transducer = map(plus1);
+var stepper = wrap(append);
+var xf = transducer(stepper);
+var init = [];
+
+// Then step through each input item by using the reducing function
+// var result = xf.step(init, 2);
+// [3] (=append([], 2+1)))
+
+// result = xf.step(result, 3);
+// [3,4] (=append([3], 3+1)))
+
+// result = xf.step(result, 4);
+// [3,4,5] (=append([3,4], 4+1)))
+
+// Finalize to output using result
+var output = reduce(xf, init, [2,3,4]);
+// [3,4,5]
+```
+---
+Transduce
+```javascript
+// First, initialize the transformation by calling a transducer
+// with a stepper transformation and defining initial value.
+var transducer = map(plus1);
+var stepper = wrap(append);
+var xf = transducer(stepper);
+var init = [];
+var input = [2,3,4];
+
+// Reduce result
+var output = reduce(xf, init, input);
+// [3,4,5]
+```
+---
+Transduce
+```javascript
+// First, initialize the transformation by calling a transducer
+// with a stepper transformation and defining initial value.
+var transducer = map(plus1);
+var stepper = append;
+var init = [];
+var input = [2,3,4];
+
+if(typeof stepper === 'function'){
+  // make sure we have a transformer for stepping
+  stepper = wrap(stepper);
+}
+
+// pass in stepper to create transformer
+var xf = transducer(stepper);
+
+// Reduce result
+var output = reduce(xf, init, input);
 // [3,4,5]
 ```
 ---
@@ -447,9 +606,7 @@ function transduce(transducer, stepper, init, input){
   // pass in stepper to create transformer
   var xf = transducer(stepper);
 
-  // xf is now a transformer
-  // we now can use reduce defined above to
-  // iterate and transform input
+  // Reduce result
   return reduce(xf, init, input);
 }
 ```
@@ -516,6 +673,14 @@ var output = transduce(transducer, stepper, init, input);
 ---
 Composition
 ```javascript
+function plus3(input){
+  return input+3;
+}
+var transducerPlus3 = map(plus3);
+```
+---
+Composition
+```javascript
 var plus3 = function(item){
   var result = plus2(item);
   result = plus1(result);
@@ -539,6 +704,17 @@ Composition
 var plus3 = compose2(plus1, plus2);
 
 var output = [plus3(2), plus3(3), plus3(4)];
+// [5,6,7]
+```
+---
+Composition
+```javascript
+var transducerPlus3 = map(plus3);
+var transducer = transducerPlus3;
+var stepper = append;
+var init = [];
+var input = [2,3,4];
+var output = transduce(transducer, stepper, init, input);
 // [5,6,7]
 ```
 ---
@@ -615,6 +791,26 @@ var output = transduce(transducer, stepper, init, input);
 // [7,8,9]
 ```
 ---
+Map
+```javascript
+var map = function(f){
+  return function(xf){
+    return {
+      init: function(){
+        return xf.init();
+      },
+      step: function(result, item){
+        var mapped = f(item);
+        return xf.step(result, mapped);
+      },
+      result: function(result){
+        return xf.result(result);
+      }
+    };
+  };
+};
+```
+---
 Filter
 ```javascript
 function isOdd(num){
@@ -627,6 +823,27 @@ var input = [1,2,3,4,5];
 var output = transduce(transducer, stepper, init, input);
 // [1,3,5]
 ```
+---
+Map
+```javascript
+var map = function(f){
+  return function(xf){
+    return {
+      init: function(){
+        return xf.init();
+      },
+      step: function(result, item){
+        var mapped = f(item);
+        return xf.step(result, mapped);
+      },
+      result: function(result){
+        return xf.result(result);
+      }
+    };
+  };
+};
+```
+---
 ---
 Filter
 ```javascript
@@ -705,6 +922,33 @@ var output = transduce(transducer, stepper, init, input);
 // [2,4,6]
 ```
 ---
+Filter
+```javascript
+var transducer = filter(not(isEqual(2)));
+var stepper = append;
+var init = [];
+var input = [1,2,3,4,5];
+var output = transduce(transducer, stepper, init, input);
+// [1,3,4,5]
+```
+---
+Remove
+```javascript
+var transducer = remove(isEqual(2));
+var stepper = append;
+var init = [];
+var input = [1,2,3,4,5];
+var output = transduce(transducer, stepper, init, input);
+// [1,3,4,5]
+```
+---
+Remove
+```javascript
+function remove(predicate){
+  return filter(not(predicate));
+}
+```
+---
 Remove
 ```javascript
 var transducer = compose(
@@ -716,13 +960,6 @@ var init = [];
 var input = [1,2,3,4,5];
 var output = transduce(transducer, stepper, init, input);
 // [2,6]
-```
----
-Remove
-```javascript
-function remove(predicate){
-  return filter(not(predicate));
-}
 ```
 ---
 Drop
@@ -815,21 +1052,6 @@ function reduce(xf, init, input){
   // how do we stop??
   var value = input.reduce(xf.step, init);
   return xf.result(value);
-}
-```
----
-Reduce Redux
-```javascript
-function wrap(stepper){
-  return {
-    init: function(){
-      throw new Error('init not supported');
-    },
-    step: stepper,
-    result: function(value){
-      return value;
-    }
-  };
 }
 ```
 ---
@@ -1050,6 +1272,23 @@ function deref(reducedValue){
 ---
 In Review
 ```javascript
+function arrayReduce(xf, init, array){
+  var value = init;
+  var idx = 0;
+  var length = array.length;
+  for(; idx < length; idx++){
+    value = xf.step(value, array[idx]);
+    if(isReduced(value)){
+      value = deref(value);
+      break;
+    }
+  }
+  return xf.result(value);
+}
+```
+---
+In Review
+```javascript
 function transduce(transducer, stepper, init, input){
   if(typeof stepper === 'function'){
     stepper = wrap(stepper);
@@ -1067,20 +1306,6 @@ function reduce(xf, init, input){
   return arrayReduce(xf, init, input);
   // or objectReduce, iteratorReduce
 }
-
-function arrayReduce(xf, init, array){
-  var value = init;
-  var idx = 0;
-  var length = array.length;
-  for(; idx < length; idx++){
-    value = xf.step(value, array[idx]);
-    if(isReduced(value)){
-      value = deref(value);
-      break;
-    }
-  }
-  return xf.result(value);
-}
 ```
 ---
 Transducers are composable algorithmic transformations.
@@ -1091,6 +1316,7 @@ Because transducers are decoupled from input or output sources, they can be used
 
 Transducers compose directly, without awareness of input or creation of intermediate aggregates.
 
+http://clojure.org/transducers
 ---
 Transducers Explained
 

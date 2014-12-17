@@ -352,6 +352,69 @@ result = xf.step(result, 4);
 var output = xf.result(result);
 // [3,4,5]
 
+// First, initialize the transformation by calling a transducer
+// with a stepper transformation and defining initial value.
+var transducer = map(plus1);
+var stepper = wrap(append);
+var xf = transducer(stepper);
+var init = [];
+
+// Then step through each input item by using the reducing function
+var result = xf.step(init, 2);
+// [3] (=append([], 2+1)))
+
+result = xf.step(result, 3);
+// [3,4] (=append([3], 3+1)))
+
+result = xf.step(result, 4);
+// [3,4,5] (=append([3,4], 4+1)))
+
+// Finalize to output using result
+var output = xf.result(result);
+// [3,4,5]
+
+// First, initialize the transformation by calling a transducer
+// with a stepper transformation and defining initial value.
+var transducer = map(plus1);
+var stepper = wrap(append);
+var xf = transducer(stepper);
+var init = [];
+
+// Then step through each input item by using the reducing function
+// var result = xf.step(init, 2);
+// [3] (=append([], 2+1)))
+
+// result = xf.step(result, 3);
+// [3,4] (=append([3], 3+1)))
+
+// result = xf.step(result, 4);
+// [3,4,5] (=append([3,4], 4+1)))
+
+// Finalize to output using result
+var output = reduce(xf, init, [2,3,4]);
+// [3,4,5]
+
+// First, initialize the transformation by calling a transducer
+// with a stepper transformation and defining initial value.
+var transducer = map(plus1);
+var stepper = append;
+var init = [];
+var input = [2,3,4];
+
+if(typeof stepper === 'function'){
+  // make sure we have a transformer for stepping
+  stepper = wrap(stepper);
+}
+
+// pass in stepper to create transformer
+var xf = transducer(stepper);
+
+// xf is now a transformer
+// we now can use reduce defined above to
+// iterate and transform input
+var output = reduce(xf, init, input);
+// [3,4,5]
+
 // Similar to our `reduce` implementation defined above.  We can encapsulate this process into a new function `transduce`.
 
 function transduce(transducer, stepper, init, input){
