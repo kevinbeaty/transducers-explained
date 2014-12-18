@@ -273,8 +273,7 @@ var output = reduce(xf, 1, input);
 Append +1
 ```javascript
 function append(result, item){
-  result.push(item);
-  return result;
+  return result.concat(item);
 }
 
 var input = [2,3,4];

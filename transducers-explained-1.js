@@ -162,8 +162,7 @@ var output = reduce(xf, 1, input);
 // ## Fancy array copy
 // We can also use `reduce` with arrays.
 function append(result, item){
-  result.push(item);
-  return result;
+  return result.concat(item);
 }
 
 var input = [2,3,4];
