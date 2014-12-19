@@ -15,6 +15,11 @@ Transducers compose directly, without awareness of input or creation of intermed
 
 http://clojure.org/transducers
 ---
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`Control.Lens.Fold`&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+https://github.com/ekmett/lens
+---
 How?
 ---
 Reducing Function
@@ -273,7 +278,7 @@ var output = reduce(xf, 1, input);
 Append +1
 ```javascript
 function append(result, item){
-  return result.concat(item);
+  return result.concat([item]);
 }
 
 var input = [2,3,4];
@@ -517,14 +522,14 @@ var output = xf.result(result);
 ---
 Transduce
 ```javascript
-// First, initialize the transformation by calling a transducer
-// with a stepper transformation and defining initial value.
+// First, initialize the transformer by calling a transducer
+// with a stepper transformer and defining initial value.
 var transducer = map(plus1);
 var stepper = wrap(append);
 var xf = transducer(stepper);
 var init = [];
 
-// Then step through each input item by using the reducing function
+// Then step through each input item using the reducing function
 var result = xf.step(init, 2);
 // [3] (=append([], 2+1)))
 
@@ -541,14 +546,14 @@ var output = xf.result(result);
 ---
 Transduce
 ```javascript
-// First, initialize the transformation by calling a transducer
-// with a stepper transformation and defining initial value.
+// First, initialize the transformer by calling a transducer
+// with a stepper transformer and defining initial value.
 var transducer = map(plus1);
 var stepper = wrap(append);
 var xf = transducer(stepper);
 var init = [];
 
-// Then step through each input item by using the reducing function
+// Then step through each input item using the reducing function
 // var result = xf.step(init, 2);
 // [3] (=append([], 2+1)))
 
@@ -565,8 +570,8 @@ var output = reduce(xf, init, [2,3,4]);
 ---
 Transduce
 ```javascript
-// First, initialize the transformation by calling a transducer
-// with a stepper transformation and defining initial value.
+// First, initialize the transformer by calling a transducer
+// with a stepper transformer and defining initial value.
 var transducer = map(plus1);
 var stepper = wrap(append);
 var xf = transducer(stepper);
@@ -580,8 +585,8 @@ var output = reduce(xf, init, input);
 ---
 Transduce
 ```javascript
-// First, initialize the transformation by calling a transducer
-// with a stepper transformation and defining initial value.
+// First, initialize the transformer by calling a transducer
+// with a stepper transformer and defining initial value.
 var transducer = map(plus1);
 var stepper = append;
 var init = [];
