@@ -1,6 +1,21 @@
 ---
 Transducers Explained
 ---
+JavaScript Transducers in the Wild
+
+- transducers-js
+- transducers.js
+- RxJs
+- Highland
+- Kefir.js
+- js-csp
+- transduce
+- transduce-stream
+- Ramda (soon)
+- Most.js (soon)
+- Bacon.js (soon)
+- ... likely more to come
+---
 Transducers are composable algorithmic transformations.
 
 They are independent from the context of their input and output sources and specify only the essence of the transformation in terms of an individual element.
@@ -24,7 +39,7 @@ var output = arrayReduce(sum, 1, [2,3,4])
 // 10 (=1+2+3+4)
 
 function arrayReduce(step, init, input){
-  // Start with an initial value
+  // Start with an initial aggregate
   var aggregate = init
 
   // Input one element at a time, passing each result
@@ -52,7 +67,7 @@ var output = arrayReduce(mult, 1, [2,3,4])
 // 24 (=1*2*3*4)
 
 function arrayReduce(step, init, input){
-  // Start with an initial value
+  // Start with an initial aggregate
   var aggregate = init
 
   // Input one element at a time, passing each result
@@ -80,7 +95,7 @@ var output = arrayReduce(mult, 2, [2,3,4])
 // 48 (=2*2*3*4)
 
 function arrayReduce(step, init, input){
-  // Start with an initial value
+  // Start with an initial aggregate
   var aggregate = init
 
   // Input one element at a time, passing each result
@@ -99,7 +114,7 @@ Transformer
 ```javascript
 function transformer(reducingFunction){
   return {
-    // Start with an initial value
+    // Start with an initial aggregate
     init: function(){
       return 1
     },
@@ -124,7 +139,7 @@ var input = [2,3,4]
 // Create transformer from reducing function
 var xf = transformer(sum)
 
-// start with an initial value
+// start with an initial aggregate
 var init = xf.init()
 
 // reduce using step reducing function
@@ -143,7 +158,7 @@ var input = [2,3,4]
 // Create transformer from reducing function
 var xf = transformer(mult)
 
-// start with an initial value
+// start with an initial aggregate
 var init = xf.init()
 
 // reduce using step reducing function
@@ -273,69 +288,102 @@ Sum +1
 ```javascript
 var output = reduce(sum, 0, output)
 // 12 (=0+3+4+5)
-// But needed intermediate array...
+// But needed intermediate aggregate...
 ```
 ---
 Sum +1
 ```javascript
-var xfplus1 = {
-  init: function(){},
-  step: function(aggregate, element){
-    var plus1ed = plus1(element)
-    return sum(aggregate, plus1ed)
-  },
-  result: function(aggregate){
-    return aggregate
+
+  var xfplus1 = {
+    init: function(){
+      return
+    },
+    step: function(aggregate, element){
+      var plus1ed = plus1(element)
+      return sum(aggregate, plus1ed)
+    },
+    result: function(aggregate){
+      return aggregate
+    }
   }
-}
+
+  // sum of [el1 + 1, el2 + 1 ...]
 ```
 ---
 Append +1
 ```javascript
-var xfplus1 = {
-  init: function(){},
-  step: function(aggregate, element){
-    var plus1ed = plus1(element)
-    return append(aggregate, plus1ed)
-  },
-  result: function(aggregate){
-    return aggregate
+
+  var xfplus1 = {
+    init: function(){
+      return
+    },
+    step: function(aggregate, element){
+      var plus1ed = plus1(element)
+      return append(aggregate, plus1ed)
+    },
+    result: function(aggregate){
+      return aggregate
+    }
   }
-}
+
+  // array of [el1 + 1, el2 + 1 ...]
 ```
 ---
 Append +1
 ```javascript
-var xf = transformer(append)
-var xfplus1 = {
-  init: function(){
-    return xf.init()
-  },
-  step: function(aggregate, element){
-    var plus1ed = plus1(element)
-    return xf.step(aggregate, plus1ed)
-  },
-  result: function(aggregate){
-    return xf.result(aggregate)
+  var step = append
+  var xfplus1 = {
+    init: function(){
+      return
+    },
+    step: function(aggregate, element){
+      var plus1ed = plus1(element)
+      return step(aggregate, plus1ed)
+    },
+    result: function(aggregate){
+      return aggregate
+    }
   }
-}
+
+  // array of [el1 + 1, el2 + 1 ...]
+```
+---
+Append +1
+```javascript
+  var xf = transformer(append)
+  var xfplus1 = {
+    init: function(){
+      return xf.init()
+    },
+    step: function(aggregate, element){
+      var plus1ed = plus1(element)
+      return xf.step(aggregate, plus1ed)
+    },
+    result: function(aggregate){
+      return xf.result(aggregate)
+    }
+  }
+
+  // array of [el1 + 1, el2 + 1 ...]
 ```
 ---
 Sum +1
 ```javascript
-var xf = transformer(sum)
-var xfplus1 = {
-  init: function(){
-    return xf.init()
-  },
-  step: function(aggregate, element){
-    var plus1ed = plus1(element)
-    return xf.step(aggregate, plus1ed)
-  },
-  result: function(aggregate){
-    return xf.result(aggregate)
+  var xf = transformer(sum)
+  var xfplus1 = {
+    init: function(){
+      return xf.init()
+    },
+    step: function(aggregate, element){
+      var plus1ed = plus1(element)
+      return xf.step(aggregate, plus1ed)
+    },
+    result: function(aggregate){
+      return xf.result(aggregate)
+    }
   }
-}
+
+  // sum of [el1 + 1, el2 + 1 ...]
 ```
 ---
 Transducer +1
@@ -397,46 +445,90 @@ var output = xf.result(aggregate)
 ---
 Transducer +2
 ```javascript
-function plus2(input){
-  return input+2
+function plus2(element){
+  return element + 2
 }
 var transducerPlus2 = ???
 ```
 ---
 Transducer +1
 ```javascript
-function transducerPlus1(xf){
-  return {
-    init: function(){
-      return xf.init()
-    },
-    step: function(aggregate, element){
-      var plussed = plus1(element)
-      return xf.step(aggregate, plussed)
-    },
-    result: function(aggregate){
-      return xf.result(aggregate)
+
+  function transducer(xf){
+    return {
+      init: function(){
+        return xf.init()
+      },
+      step: function(aggregate, element){
+        var mapped = plus1(element)
+        return xf.step(aggregate, mapped)
+      },
+      result: function(aggregate){
+        return xf.result(aggregate)
+      }
     }
   }
-}
+  // transducerPlus1
 ```
 ---
 Transducer +2
 ```javascript
-function transducerPlus2(xf){
-  return {
-    init: function(){
-      return xf.init()
-    },
-    step: function(aggregate, element){
-      var plussed = plus2(element)
-      return xf.step(aggregate, plussed)
-    },
-    result: function(aggregate){
-      return xf.result(aggregate)
+
+  function transducer(xf){
+    return {
+      init: function(){
+        return xf.init()
+      },
+      step: function(aggregate, element){
+        var mapped = plus2(element)
+        return xf.step(aggregate, mapped)
+      },
+      result: function(aggregate){
+        return xf.result(aggregate)
+      }
     }
   }
-}
+  // transducerPlus2
+```
+---
+Transducer +2
+```javascript
+  var mappingFunction = plus2
+  function transducer(xf){
+    return {
+      init: function(){
+        return xf.init()
+      },
+      step: function(aggregate, element){
+        var mapped = mappingFunction(element)
+        return xf.step(aggregate, mapped)
+      },
+      result: function(aggregate){
+        return xf.result(aggregate)
+      }
+    }
+  }
+  // transducerPlus2
+```
+---
+Transducer +1
+```javascript
+  var mappingFunction = plus1
+  function transducer(xf){
+    return {
+      init: function(){
+        return xf.init()
+      },
+      step: function(aggregate, element){
+        var mapped = mappingFunction(element)
+        return xf.step(aggregate, mapped)
+      },
+      result: function(aggregate){
+        return xf.result(aggregate)
+      }
+    }
+  }
+  // transducerPlus1
 ```
 ---
 Mapping Transducer
@@ -499,14 +591,18 @@ var output = xf.result(aggregate)
 ---
 Transduce
 ```javascript
-// First, initialize the transformer by calling a transducer
-// with a base transformer and defining initial value.
+// Create a transducer and compatible
+// base transformer and initial aggregate
 var transducer = map(plus1)
 var baseXf = transformer(append)
-var xf = transducer(baseXf)
 var init = []
 
-// Then step through each input element using the reducing function
+// Initialize the transducer with base
+// transformer to get new transformer
+var xf = transducer(baseXf)
+
+// Step through each input element
+// using the reducing function
 var aggregate = xf.step(init, 2)
 // [3] (=append([], 2+1)))
 
@@ -523,14 +619,18 @@ var output = xf.result(aggregate)
 ---
 Transduce
 ```javascript
-// First, initialize the transformer by calling a transducer
-// with a base transformer and defining initial value.
+// Create a transducer and compatible
+// base transformer and initial aggregate
 var transducer = map(plus1)
 var baseXf = transformer(append)
-var xf = transducer(baseXf)
 var init = []
 
-// Then step through each input element using the reducing function
+// Initialize the transducer with base
+// transformer to get new transformer
+var xf = transducer(baseXf)
+
+// Step through each input element
+// using the reducing function
 // var aggregate = xf.step(init, 2)
 // [3] (=append([], 2+1)))
 
@@ -547,80 +647,45 @@ var output = reduce(xf, init, [2,3,4])
 ---
 Transduce
 ```javascript
-// First, initialize the transformer by calling a transducer
-// with a base transformer and defining initial value.
-var transducer = map(plus1)
-var baseXf = transformer(append)
-var xf = transducer(baseXf)
-var init = []
-var input = [2,3,4]
-
-// Reduce result
-var output = reduce(xf, init, input)
-// [3,4,5]
-```
----
-Transduce
-```javascript
-// First, initialize the transformer by calling a transducer
-// with a base transformer and defining initial value.
+// Create a transducer and compatible
+// base transformer and initial aggregate
 var transducer = map(plus1)
 var baseXf = transformer(append)
 var init = []
-var input = [2,3,4]
-
-// initialize transducer with base transformer
-var xf = transducer(baseXf)
-
-// Reduce result
-var output = reduce(xf, init, input)
-// [3,4,5]
-```
----
-Transduce
-```javascript
-// First, initialize the transformer by calling a transducer
-// with a base transformer and defining initial value.
-var transducer = map(plus1)
-var baseXf = transformer(append)
-var init = []
-var input = [2,3,4]
 
 function transduce(transducer, baseXf, init, input){
   // initialize transducer with base transformer
   var xf = transducer(baseXf)
 
-  // Reduce result
+  // Reduce result over input
   return reduce(xf, init, input)
 }
 
-// Transduce result
+// Transduce result over input
+var input = [2,3,4]
 var output = transduce(transducer, baseXf, init, input)
 // [3,4,5]
 ```
 ---
 Transduce
 ```javascript
-// First, initialize the transformer by calling a transducer
-// with a base transformer and defining initial value.
+// Create a transducer and compatible
+// base transformer and initial aggregate
 var transducer = map(plus1)
-var step = append
+var baseXf = append
 var init = []
-var input = [2,3,4]
 
 function transduce(transducer, baseXf, init, input){
-  // wrap reducing function as transformer if necessary
-  baseXf = transformer(baseXf)
-
   // initialize transducer with base transformer
-  var xf = transducer(baseXf)
+  var xf = transducer(transformer(baseXf))
 
-  // Reduce result
+  // Reduce result over input
   return reduce(xf, init, input)
 }
 
-// Transduce result
-var output = transduce(transducer, step, init, input)
+// Transduce result over input
+var input = [2,3,4]
+var output = transduce(transducer, baseXf, init, input)
 // [3,4,5]
 ```
 ---
@@ -684,15 +749,20 @@ var output = transduce(transducer, baseXf, init, input)
 // 120 (=4*5*6)
 ```
 ---
-Composition
+Transducer +3
 ```javascript
-function plus3(input){
-  return input+3
+function plus3(element){
+  return element + 3
 }
+var transducerPlus3 = ???
+```
+---
+Transducer +3
+```javascript
 var transducerPlus3 = map(plus3)
 ```
 ---
-Composition
+Transducer +3
 ```javascript
 var plus3 = function(value){
   var value2 = plus2(value)
@@ -703,11 +773,12 @@ var plus3 = function(value){
 ---
 Composition
 ```javascript
-function compose2(fn1, fn2){
-  return function(value){
-    var value2 = fn2(value)
-    var value1 = fn1(value2)
-    return value2
+function compose2(f, g){
+  return function f_after_g(value){
+    var valueG = g(value)
+    var valueF = f(valueG)
+    return valueF
+    // return f(g(value))
   }
 }
 ```
@@ -861,36 +932,6 @@ function filter(predicate){
 }
 ```
 ---
-Filter
-```javascript
-function isEqual(y){
-  return function(x){
-    return x === y
-  }
-}
-var transducer = filter(isEqual(2))
-var baseXf = append
-var init = []
-var input = [1,2,3,4,5]
-var output = transduce(transducer, baseXf, init, input)
-// [2]
-```
----
-Filter
-```javascript
-function not(predicate){
-  return function(x){
-    return !predicate(x)
-  }
-}
-var transducer = filter(not(isEqual(2)))
-var baseXf = append
-var init = []
-var input = [1,2,3,4,5]
-var output = transduce(transducer, baseXf, init, input)
-// [1,3,4,5]
-```
----
 Pipeline order
 ```javascript
 var transducer = compose(
@@ -913,46 +954,6 @@ var init = []
 var input = [1,2,3,4,5]
 var output = transduce(transducer, baseXf, init, input)
 // [2,4,6]
-```
----
-Filter
-```javascript
-var transducer = filter(not(isEqual(2)))
-var baseXf = append
-var init = []
-var input = [1,2,3,4,5]
-var output = transduce(transducer, baseXf, init, input)
-// [1,3,4,5]
-```
----
-Remove
-```javascript
-var transducer = remove(isEqual(2))
-var baseXf = append
-var init = []
-var input = [1,2,3,4,5]
-var output = transduce(transducer, baseXf, init, input)
-// [1,3,4,5]
-```
----
-Remove
-```javascript
-function remove(predicate){
-  return filter(not(predicate))
-}
-```
----
-Remove
-```javascript
-var transducer = compose(
-      filter(isOdd),        // [1,3,5]
-      map(plus1),           // [2,4,6]
-      remove(isEqual(4)))   // [2,6]
-var baseXf = append
-var init = []
-var input = [1,2,3,4,5]
-var output = transduce(transducer, baseXf, init, input)
-// [2,6]
 ```
 ---
 Drop
@@ -1030,10 +1031,7 @@ function transduce(transducer, baseXf, init, input){
   var xf = transducer(transformer(baseXf))
   return reduce(xf, init, input)
 }
-```
----
-Reduce Redux
-```javascript
+
 function reduce(xf, init, input){
   xf = transformer(xf)
 
@@ -1045,15 +1043,20 @@ function reduce(xf, init, input){
 ---
 Reduce Redux
 ```javascript
+function transduce(transducer, baseXf, init, input){
+  var xf = transducer(transformer(baseXf))
+  return reduce(xf, init, input)
+}
+
 function reduce(xf, init, input){
-  xf = transformer(xf)
-  return arrayReduce(xf, init, input)
+  return arrayReduce(transformer(xf), init, input)
 }
 
 function arrayReduce(xf, init, input){
   var aggregate = init
   for(var idx = 0; idx < input.length; idx++){
-    aggregate = xf.step(aggregate, input[idx])
+    var element = input[idx]
+    aggregate = xf.step(aggregate, element)
     // We need to break here, but how do we know?
   }
   return xf.result(aggregate)
@@ -1073,17 +1076,27 @@ function isReduced(aggregate){
   return aggregate && aggregate.__transducers_reduced__
 }
 
-function deref(reducedValue){
-  return reducedValue.value
+function deref(reducedAggregate){
+  return reducedAggregate.value
 }
 ```
 ---
 Reduce Redux
 ```javascript
+function transduce(transducer, baseXf, init, input){
+  var xf = transducer(transformer(baseXf))
+  return reduce(xf, init, input)
+}
+
+function reduce(xf, init, input){
+  return arrayReduce(transformer(xf), init, input)
+}
+
 function arrayReduce(xf, init, input){
   var aggregate = init
   for(var idx = 0; idx < input.length; idx++){
-    aggregate = xf.step(aggregate, input[idx])
+    var element = input[idx]
+    aggregate = xf.step(aggregate, element)
     if(isReduced(aggregate)){
       aggregate = deref(aggregate)
       break
@@ -1106,7 +1119,7 @@ function take(n){
         aggregate = xf.step(aggregate, element)
         if(--left <= 0){
           // we are done, so signal reduced
-          aggregate = reduced(aggregate)
+          return reduced(aggregate)
         }
         return aggregate
       },
@@ -1141,57 +1154,12 @@ var output = transduce(transducer, baseXf, init, input)
 // [3,4]
 ```
 ---
-Appending
-```javascript
-var transducer = appending(7)
-var baseXf = append
-var init = []
-var input = [1,2,3,4,5]
-var output = transduce(transducer, baseXf, init, input)
-// [1,2,3,4,5,7]
-```
----
-Appending
-```javascript
-function appending(toAppend){
-  return function transducer(xf){
-    return {
-      init: function(){
-        return xf.init()
-      },
-      step: function(aggregate, element){
-        return xf.step(aggregate, element)
-      },
-      result: function(aggregate){
-        aggregate = xf.step(aggregate, toAppend)
-        if(isReduced(aggregate)){
-          aggregate = deref(aggregate)
-        }
-        return xf.result(aggregate)
-      }
-    }
-  }
-}
-```
----
-Appending
-```javascript
-var transducer = compose(
-    map(plus1),    // [2,3,4,5,6]
-    appending(7))  // [2,3,4,5,6,7]
-var baseXf = append
-var init = []
-var input = [1,2,3,4,5]
-var output = transduce(transducer, baseXf, init, input)
-// [2,3,4,5,6,7]
-```
----
 In Review
 ```javascript
-function transducerFactory(){
-  return function transducer(xf){
-    return {
-      init: function initialValue(){
+function transducerFactory(/*factory args*/){
+  return function transducer(xf/*:transformer*/){
+    return /* transformed transformer */{
+      init: function initialAggregate(){
         return xf.init()
       },
       step: function reducing(aggregate, element){
@@ -1200,7 +1168,7 @@ function transducerFactory(){
         //   2. Transform element
         //   3. Terminate with reduced
         //
-        // Value/Accumulator is off limits
+        // Aggregate is off limits
         // Pass all the way to baseXf
         return xf.step(aggregate, element)
       },
@@ -1217,63 +1185,27 @@ function transducerFactory(){
 ---
 In Review
 ```javascript
-// wrap reducing function as transformer
-function transformer(xf){
-  if(typeof xf !== 'function'){
-    return xf
-  }
-  return {
-    init: function(){},
-    step: xf,
-    result: function(aggregate){
-      return aggregate
-    }
-  }
-}
-
-// signal early termination
-function reduced(aggregate){
-  return {
-    value: aggregate,
-    __transducers_reduced__: true
-  }
-}
-
-function isReduced(aggregate){
-  return aggregate && aggregate.__transducers_reduced__
-}
-
-function deref(reducedValue){
-  return reducedValue.value
-}
-```
----
-In Review
-```javascript
-function arrayReduce(xf, init, input){
-  var aggregate = init
-  for(var idx = 0; idx < input.length; idx++){
-    aggregate = xf.step(aggregate, input[idx])
-    if(isReduced(aggregate)){
-      aggregate = deref(aggregate)
-      break
-    }
-  }
-  return xf.result(aggregate)
-}
-```
----
-In Review
-```javascript
 function transduce(transducer, baseXf, init, input){
   var xf = transducer(transformer(baseXf))
   return reduce(xf, init, input)
 }
 
 function reduce(xf, init, input){
-  xf = transformer(xf)
-  return arrayReduce(xf, init, input)
+  return arrayReduce(transformer(xf), init, input)
   // or objectReduce, iteratorReduce
+}
+
+function arrayReduce(xf, init, input){
+  var aggregate = init
+  for(var idx = 0; idx < input.length; idx++){
+    var element = input[idx]
+    aggregate = xf.step(aggregate, element)
+    if(isReduced(aggregate)){
+      aggregate = deref(aggregate)
+      break
+    }
+  }
+  return xf.result(aggregate)
 }
 ```
 ---
