@@ -22,8 +22,10 @@ var toURL = R.pipe(
 
 // Lens to operate on value in [key, value] pair
 var valueLens = R.lens(
+      // (entry) => entry[1]
       R.last,
-      R.flip(R.converge(R.append, R.nthArg(1), R.init)))
+      // (value, entry) => [entry[0], value]
+      R.flip(R.converge(Array, R.head, R.nthArg(1))))
 
 // ['IP', 'GET /url/path'] -> ['IP', 'http://simplectic.com/url/path']
 var valueToUrl = valueLens.map(toURL)
