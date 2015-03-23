@@ -1,0 +1,19 @@
+{
+  "private": true,
+  "name": "ramda-logs",
+  "version": "0.0.0",
+  "description": "Demo for 'Streaming Logs with Transducers and Ramda'",
+  "main": "pagevisits.js",
+  "author": "Kevin Beaty",
+  "license": "MIT",
+  "homepage": "http://simplectic.com/blog/2015/ramda-transducers-logs/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kevinbeaty/transducers-explained"
+  },
+  "dependencies": {
+    "ramda": "~0.13.0",
+    "transduce": "~0.7.0",
+    "transduce-stream": "~0.4.0"
+  }
+}
