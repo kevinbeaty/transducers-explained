@@ -25,7 +25,7 @@ var valueLens = R.lens(
       // (entry) => entry[1]
       R.last,
       // (value, entry) => [entry[0], value]
-      R.flip(R.converge(Array, R.head, R.nthArg(1))))
+      R.flip(R.useWith(Array, R.head)))
 
 // ['IP', 'GET /url/path'] -> ['IP', 'http://simplectic.com/url/path']
 var valueToUrl = valueLens.map(toURL)
