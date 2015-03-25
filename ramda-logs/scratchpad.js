@@ -10,12 +10,14 @@ var isPage = R.allPass([isGet, notStatic])
 
 var out
 out =
-R.map(isPage, [
+R.filter(isPage, [
   '127.0.0.1 - - [26/Feb/2015 19:25:25] "GET /static/r.js HTTP/1.1"',
   '127.0.0.5 - - [26/Feb/2015 19:27:35] "GET /blog/ HTTP/1.1" 200 -',
   '127.0.0.1 - - [28/Feb/2015 16:44:03] "GET / HTTP/1.1" 200 -',
   '127.0.0.1 - - [28/Feb/2015 16:44:03] "POST / HTTP/1.1" 200 -'])
-// => [false, true, true, false]
+// => [ '127.0.0.5 - - [26/Feb/2015 19:27:35] "GET /blog/ HTTP/1.1" 200 -',
+//      '127.0.0.1 - - [28/Feb/2015 16:44:03] "GET / HTTP/1.1" 200 -' ]
+console.log(out)
 
 
 // 'log line' -> ['IP', 'GET /url/path']
@@ -24,11 +26,9 @@ var splitLine = R.pipe(
       R.tail)
 out =
 R.map(splitLine, [
-  '127.0.0.1 - - [26/Feb/2015 19:25:25] "GET /static/r.js HTTP/1.1"',
   '127.0.0.5 - - [26/Feb/2015 19:27:35] "GET /blog/ HTTP/1.1" 200 -',
   '127.0.0.1 - - [28/Feb/2015 16:44:03] "GET / HTTP/1.1" 200 -'])
-// => [ [ '127.0.0.1', 'GET /static/r.js HTTP/1.1' ],
-//      [ '127.0.0.5', 'GET /blog/ HTTP/1.1' ],
+// => [ [ '127.0.0.5', 'GET /blog/ HTTP/1.1' ],
 //      [ '127.0.0.1', 'GET / HTTP/1.1' ] ]
 
 
